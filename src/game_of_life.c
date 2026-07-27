@@ -1,17 +1,25 @@
+#include "game_of_life.h"
+
 #include <ncurses.h>
 #include <stdio.h>
-#include <unistd.h>
 
-#define W 80
-#define H 25
-#define MIN_D 10000
-#define MAX_D 300000
-#define STEP_D 30000
-
-void print_usage(const char* prog_name) {
-    fprintf(stderr, "Usage: %s < <state_file>\n", prog_name);
-    fprintf(stderr, "The initial %dx%d field (0/1 per cell) must be piped in via stdin.\n", W, H);
-    fprintf(stderr, "Example: %s < ../states/state3.txt\n", prog_name);
+int main(void) {
+    int curr[H][W], next[H][W], p1[H][W], p2[H][W], p3[H][W];
+    int status = 0;
+    if (!read_field(curr)) {
+        status = 1;
+    } else if (freopen("/dev/tty", "r", stdin) == NULL) {
+        status = 1;
+    } else {
+        initscr();
+        cbreak();
+        noecho();
+        nodelay(stdscr, TRUE);
+        curs_set(0);
+        loop(curr, next, p1, p2, p3);
+        endwin();
+    }
+    return status;
 }
 
 int read_field(int f[H][W]) {
@@ -183,26 +191,4 @@ void loop(int curr[H][W], int next[H][W], int p1[H][W], int p2[H][W], int p3[H][
         refresh();
         napms(delay / 1000);
     }
-}
-
-int main(int argc, char* argv[]) {
-    int curr[H][W], next[H][W], p1[H][W], p2[H][W], p3[H][W];
-    int status = 0;
-    if (isatty(STDIN_FILENO)) {
-        print_usage(argc > 0 ? argv[0] : "./game_of_life");
-        status = 1;
-    } else if (!read_field(curr)) {
-        status = 1;
-    } else if (freopen("/dev/tty", "r", stdin) == NULL) {
-        status = 1;
-    } else {
-        initscr();
-        cbreak();
-        noecho();
-        nodelay(stdscr, TRUE);
-        curs_set(0);
-        loop(curr, next, p1, p2, p3);
-        endwin();
-    }
-    return status;
 }
